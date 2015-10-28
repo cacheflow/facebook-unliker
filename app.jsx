@@ -1,6 +1,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
-
+var AppActions = require('app/js/actions/app-actions');
 
 var Facebook = React.createClass({
   getInitialState: {
@@ -16,7 +16,7 @@ var Facebook = React.createClass({
       xfbml      : false,
       version    : 'v2.4'
     });
-  
+
     //Check to see if the user is logged in
     //or logged out
    FB.getLoginStatus(function(response) {
@@ -62,15 +62,16 @@ var Facebook = React.createClass({
     else {
       console.log("Please login into facebook");
     }
-  }, 
+  },
 
   checkLoginState:function() {
     FB.getLoginStatus(function(response) {
       this.checkStatus(response);
     }.bind(this));
-  }, 
+  },
 
   handleClick:function() {
+    App
     FB.login(function(response){
       FB.api("me/likes", function(response) {
         console.log(response);
@@ -84,7 +85,7 @@ var Facebook = React.createClass({
       </button>
     )
   }
-   
+
 });
 
 ReactDOM.render(<Facebook />, document.getElementById('facebook-login'))

@@ -48,16 +48,25 @@
 
 	var React = __webpack_require__(1);
 	var ReactDOM = __webpack_require__(157);
-	var current = __webpack_require__(301);
+	var Promise = __webpack_require__(301);
+	var delay = Promise.delay();
 
 	var Facebook = React.createClass({
 	  displayName: 'Facebook',
 
 	  getInitialState: function getInitialState() {
 	    return {
-	      likes: null
+	      firstLikes: [],
+	      secondLikes: []
 	    };
 	  },
+
+	  getDefaultProps: function getDefaultProps() {
+	    return {
+	      value: "me/likes?fields=link,name,created_time&limit=200"
+	    };
+	  },
+
 	  componentDidMount: function componentDidMount() {
 	    //Initialize the Facebook Javascript SDK
 	    window.fbAsyncInit = function () {
@@ -79,73 +88,83 @@
 	    })(document, 'script', 'facebook-jssdk');
 	  },
 
-	  getLikes: function getLikes() {
-	    var self = this;
-	    FB.getLoginStatus(function (response) {
-	      if (response.status == "connected") {
-	        FB.api("me/likes", function (response) {
-	          self.setState({ likes: response });
-	        });
-	      } else if (response.status === "not_authorized") {
-	        console.log("You're not logged in. Please log in.");
-	      } else {
-	        console.log("Please login into facebook");
-	      }
+	  setLikes: function setLikes(likes) {
+	    this.setState({ likes: likes });
+	  },
+
+	  setSecondLikes: function setSecondLikes(secondLikesFromApi) {
+	    this.setState({ secondLikes: secondLikesFromApi });
+	    console.log("state of second likes", this.state.secondLikes);
+	  },
+
+	  facebookAsPromises: function facebookAsPromises() {
+	    var fb = Promise.promisifyAll(FB);
+	    return fb;
+	  },
+
+	  facebookLoginAsPromise: function facebookLoginAsPromise() {
+	    var fbLogin = Promise.promisify(FB.getLoginStatus);
+	    return fbLogin;
+	  },
+
+	  getFirstLikes: function getFirstLikes(apiEndpoint) {
+	    return new Promise(function (resolve, reject) {
+	      FB.api("me/likes?fields=link,name,created_time&limit=100", function (likes) {
+	        resolve(likes);
+	      });
 	    });
 	  },
+
+	  getAllLikes: function getAllLikes(myLikes) {
+	    return new Promise(function (resolve, reject) {
+	      FB.api(myLikes.paging.next(function (data) {
+	        console.log(data);
+	      }));
+	    });
+	  },
+
 	  checkLoginStatus: function checkLoginStatus() {
-	    FB.getLoginStatus((function (response) {
-	      if (response.status == "connected") {
-	        this.getLikes();
-	      } else if (response.status === "not_authorized") {
-	        console.log("You're not logged in. Please log in.");
+	    return new Promise(function (resolve, rejecet) {
+	      FB.getLoginStatus(function (data) {
+	        resolve(data);
+	      });
+	    });
+	  },
+
+	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(nextApiEndpoint) {
+	    this.setState({ firstLikes: nextApiEndpoint.data });
+	    this.fetchAllLikes(nextApiEndpoint);
+	  },
+
+	  fetchAllLikes: function fetchAllLikes(nextApiEndpoint) {
+	    var myLikes = [];
+	    FB.api(nextApiEndpoint, (function (likes) {
+	      if (nextApiEndpoint) {
+	        this.fetchAllLikes(likes.paging.next);
+	        console.log(likes);
+	        myLikes.push(likes);
 	      } else {
-	        console.log("Please login into facebook");
+	        console.log("nope");
 	      }
 	    }).bind(this));
 	  },
 
-	  testAPI: function testAPI() {
-	    console.log("Welcome! Fetching your information");
-	    FB.api('/me', function (response) {
-	      console.log("Successful login for:" + response.name);
-	      console.log(response);
+	  getLikes: function getLikes() {
+	    var methodContext = this;
+	    Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then(function (data) {
+	      methodContext.setStateAndFetchAllLikes(data[1].paging.next);
 	    });
 	  },
-
-	  deleteLikes: function deleteLikes(post_id) {
-	    FB.api("post_id" + "/likes", "DELETE", function (response) {
-	      if (response && !response.error) {
-	        console.log(response);
-	      }
-	    });
-	  },
-
-	  // checkStatus: function(response) {
-	  //   console.log('checkStatus being called');
-	  //   console.log(response);
-
-	  //   if (response.status == "connected") {
-	  //     this.getLikes();
-	  //   }
-	  //   else if(response.status === "not_authorized") {
-	  //     console.log("You're not logged in. Please log in.");
-	  //   }
-	  //   else {
-	  //     console.log("Please login into facebook");
-	  //   }
-	  // },
-
-	  handleClick: function handleClick() {
+	  handleClick: function handleClick(formData) {
 	    this.getLikes();
 	  },
 
 	  render: function render() {
-	    if (this.state.likes !== null) {
-	      return React.createElement(Like, { data: this.state.likes });
-	    } else {
-	      return React.createElement('button', { className: 'btn btn-primary', onClick: this.handleClick });
-	    }
+	    return React.createElement(
+	      'button',
+	      { className: 'btn btn-primary', onClick: this.handleClick },
+	      'Login into Facebook'
+	    );
 	  }
 	});
 
@@ -153,33 +172,11 @@
 	  displayName: 'Like',
 
 	  propTypes: {
-	    data: React.PropTypes.object
+	    likes: React.PropTypes.object
 	  },
 
 	  render: function render() {
-	    var myLikes = this.props.data.data.map(function (data) {
-	      return React.createElement(
-	        'div',
-	        null,
-	        React.createElement(
-	          'div',
-	          null,
-	          data.name
-	        ),
-	        React.createElement(
-	          'div',
-	          null,
-	          data.id
-	        )
-	      );
-	    });
-	    return React.createElement(
-	      'div',
-	      null,
-	      ' ',
-	      myLikes
-	    );
-	    // var likes = Object.keys(this.props.data).map(key => this.props.data[key]);
+	    console.log("here's your data", this.props.likes);
 	  }
 	});
 

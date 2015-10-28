@@ -9,6 +9,7 @@
   "dependencies": {
     "bluebird": "^2.10.2",
     "dotenv": "^1.2.0",
+    "flux": "^2.1.1",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
     "react-facebook-login": "^1.0.5"
