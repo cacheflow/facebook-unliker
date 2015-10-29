@@ -7,13 +7,13 @@ var Facebook = React.createClass({
   getInitialState: function(){
     return {
       firstLikes: [],
-      secondLikes: []
+      likes: []
     };
   },
 
   getDefaultProps: function() {
     return {
-      value: "me/likes?fields=link,name,created_time&limit=200"
+      value: "me/likes?fields=link,name,created_time&limit=100"
     };
   },
 
@@ -23,7 +23,8 @@ var Facebook = React.createClass({
     FB.init({
       appId      : '1630177167258981',
       xfbml      : false,
-      version    : 'v2.4'
+      version    : 'v2.4',
+      summary    : true
     });
   };
   (function(d, s, id){
@@ -84,35 +85,46 @@ var Facebook = React.createClass({
     this.fetchAllLikes(nextApiEndpoint);
   },
 
-  fetchAllLikes:function(nextApiEndpoint) {
+  captureAllLikes:function(data) {
     var myLikes = [];
-    FB.api(nextApiEndpoint, function(likes) {
-      if(nextApiEndpoint) {
-        this.fetchAllLikes(likes.paging.next);
-        console.log(likes);
-        myLikes.push(likes);
-      }
-      else {
-        console.log("nope");
+    myLikes.push(data);
+    console.log("my likes are ", myLikes.length);
+  },
+
+  fetchAllLikes:function(nextApiEndpoint) {
+    FB.api(nextApiEndpoint, function(responseData) {
+      var allLikes = this.state.likes;
+      allLikes = allLikes.concat(responseData.data);
+      this.setState({likes: allLikes});
+      console.log(this.state.likes);
+      if(responseData.paging) {
+        this.fetchAllLikes(responseData.paging.next);
       }
     }.bind(this));
   },
 
-
  getLikes:function() {
    var methodContext = this;
-  Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then(function(data) {
+   Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then(function(data) {
     methodContext.setStateAndFetchAllLikes(data[1].paging.next);
-  });
-
+   });
  },
+
   handleClick:function(formData) {
     this.getLikes();
   },
 
   render:function() {
+    var likes = this.state.likes.map(function(like) {
+      return (
+        <li key={like.id}>  <a href={like.link}>{like.name}</a> </li>
+      );
+    });
     return (
-      <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
+      <div>
+        <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
+        <ul> {likes}</ul>
+      </div>
     );
   }
 });
