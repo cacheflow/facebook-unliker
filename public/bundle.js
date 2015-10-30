@@ -167,18 +167,12 @@
 	  },
 
 	  render: function render() {
-	    var likes = this.state.likes.map(function (like) {
-	      return React.createElement(
-	        'li',
-	        { key: like.id },
-	        '  ',
-	        React.createElement(
-	          'a',
-	          { href: like.link },
-	          like.name
-	        ),
-	        ' '
-	      );
+	    var passDownLikesToChild = this.state.likes.map(function (likesResponse) {
+	      return React.createElement(Like, { key: likesResponse.id,
+	        name: likesResponse.name,
+	        link: likesResponse.link,
+	        id: likesResponse.id
+	      });
 	    });
 	    return React.createElement(
 	      'div',
@@ -188,12 +182,7 @@
 	        { className: 'btn btn-primary', onClick: this.handleClick },
 	        'Login into Facebook'
 	      ),
-	      React.createElement(
-	        'ul',
-	        null,
-	        ' ',
-	        likes
-	      )
+	      passDownLikesToChild
 	    );
 	  }
 	});
@@ -202,11 +191,37 @@
 	  displayName: 'Like',
 
 	  propTypes: {
-	    likes: React.PropTypes.object
+	    name: React.PropTypes.string,
+	    link: React.PropTypes.string,
+	    id: React.PropTypes.string
 	  },
-
+	  unlikeButton: function unlikeButton(buttonId) {
+	    FB.api(this.props.id, function (response) {
+	      console.log(response);
+	    });
+	  },
 	  render: function render() {
-	    console.log("here's your data", this.props.likes);
+	    var pageId = this.props.id;
+	    return React.createElement(
+	      'div',
+	      null,
+	      React.createElement(
+	        'ul',
+	        null,
+	        React.createElement(
+	          'li',
+	          null,
+	          React.createElement(
+	            'button',
+	            { className: 'btn btn-primary',
+	              onClick: this.unlikeButton
+	            },
+	            'Unlike page ',
+	            this.props.name
+	          )
+	        )
+	      )
+	    );
 	  }
 	});
 

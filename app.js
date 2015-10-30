@@ -17,6 +17,7 @@ var Facebook = React.createClass({
     };
   },
 
+
   componentDidMount: function() {
     //Initialize the Facebook Javascript SDK
    window.fbAsyncInit = function() {
@@ -115,15 +116,19 @@ var Facebook = React.createClass({
   },
 
   render:function() {
-    var likes = this.state.likes.map(function(like) {
+    var passDownLikesToChild = this.state.likes.map(function(likesResponse) {
       return (
-        <li key={like.id}>  <a href={like.link}>{like.name}</a> </li>
+        <Like key={likesResponse.id}
+          name={likesResponse.name}
+          link={likesResponse.link}
+          id={likesResponse.id}
+        />
       );
     });
     return (
       <div>
         <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
-        <ul> {likes}</ul>
+        {passDownLikesToChild}
       </div>
     );
   }
@@ -131,11 +136,29 @@ var Facebook = React.createClass({
 
 var Like = React.createClass({
   propTypes: {
-    likes: React.PropTypes.object,
+    name: React.PropTypes.string,
+    link: React.PropTypes.string,
+    id: React.PropTypes.string
   },
-
+  unlikeButton:function(buttonId) {
+    FB.api(this.props.id, function(response) {
+      console.log(response);
+    });
+  },
   render:function() {
-    console.log("here's your data", this.props.likes);
+    var pageId = this.props.id;
+    return (
+      <div>
+        <ul>
+          <li>
+            <button className="btn btn-primary"
+               onClick={this.unlikeButton}
+               >Unlike page {this.props.name}
+             </button>
+        </li>
+        </ul>
+      </div>
+    );
   }
 });
 
