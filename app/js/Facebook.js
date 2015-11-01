@@ -3,6 +3,9 @@ var ReactDOM = require('react-dom');
 var Promise = require('bluebird');
 var delay = Promise.delay();
 var update = require('react-addons-update');
+var _ = require('underscore');
+var Unlike = require('./Unlike');
+var Like = require('./Like');
 
 var Facebook = React.createClass({
   getInitialState: function(){
@@ -27,7 +30,7 @@ var Facebook = React.createClass({
     FB.init({
       appId      : '1630177167258981',
       xfbml      : false,
-      version    : 'v2.4',
+      version    : 'v2.5',
       summary    : true
     });
   };
@@ -64,8 +67,11 @@ var Facebook = React.createClass({
 
  checkLoginStatus: function() {
   return new Promise(function(resolve, rejecet) {
-    FB.getLoginStatus(function(data) {
+    FB.login(function(data) {
+      console.log(data);
       resolve(data);
+    },{
+      scope: 'publish_actions'
     });
   });
  },
@@ -83,10 +89,9 @@ var Facebook = React.createClass({
   },
 
   getLikes:function() {
-   var methodContext = this;
    Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then(function(data) {
-    methodContext.setStateAndFetchAllLikes(data[1].paging.next);
-   });
+    this.setStateAndFetchAllLikes(data[1].paging.next);
+   }.bind(this));
   },
 
  setStateAndFetchAllLikes:function(nextApiEndpoint) {
@@ -99,22 +104,54 @@ var Facebook = React.createClass({
     this.setState({clicked: true});
   },
 
+  unlikeOnFacebook:function(propsId) {
 
-  updateUnlikes:function(unlike, arrIndex) {
-    var unlikedFromState = this.state.unliked;
-    unlikedFromState = unlikedFromState.concat(unlike);
+  },
+
+  redoLike:function(unlikedProps) {
+    this.setState({unliked:
+      update(
+        this.state.unliked, {$splice: [[unlikedProps.arrIndex, 1]]})
+    });
+    var likedFromState = this.state.likes;
+    var newLikedState = update(
+      likedFromState, {$push: [{
+        name: unlikedProps.name,
+        id: unlikedProps.id,
+        link: unlikedProps.link
+    }]});
+    this.setState({likes: newLikedState});
+
+    console.log("decreasing your length", this.state.unliked.length);
+  },
+
+  updateUnlikes:function(props) {
     this.setState({likes:
       update(
-        this.state.likes, {$splice: [[arrIndex, 1]]})
+        this.state.likes, {$splice: [[props.arrIndex, 1]]})
       });
-      this.setState({unliked: unlikedFromState});
-    console.log("these are your unlikes", this.state.likes.length);
+    var unlikedFromState = this.state.unliked;
+    var newUnlikedState = update(
+      unlikedFromState, {$push: [{
+        name: props.name,
+        id: props.id,
+        link: props.link
+    }]});
+    this.setState({unliked: newUnlikedState});
+  },
+
+  postToFacebook:function() {
+    var fbMsg = this.refs.post.value;
+    FB.login(function(){
+      FB.api('/me/feed', 'post', {message: 'Hello, world!'});
+    }, {scope: 'publish_actions'});
   },
 
   render:function() {
     var methodContext = this;
     var showLoginOrLikes =
-    this.state.clicked ? <h2>Pages Liked</h2> :
+    this.state.clicked ? <div><h1>Facebook Unliker: Unlike embarrassing stuff</h1>
+     <h2>Pages Liked</h2></div>:
     <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
     var passDownLikesToChild = this.state.likes.map(function(likesResponse, index) {
       return (
@@ -130,9 +167,15 @@ var Facebook = React.createClass({
     }.bind(this));
     var passDownUnlikesToChild = this.state.unliked.map(function(unlike, index) {
       return (
-        <Unlike key={index} name = {unlike} arrIndex={index} />
+        <Unlike key = {unlike.id}
+           name={unlike.name}
+           id={unlike.id}
+           link={unlike.link}
+           arrIndex={index}
+           redoLike={this.redoLike}
+        />
       );
-    });
+    }.bind(this));
     return (
       <div>
         {showLoginOrLikes}
@@ -146,51 +189,5 @@ var Facebook = React.createClass({
 });
 
 
-var Like = React.createClass({
-  propTypes: {
-    name: React.PropTypes.string,
-    link: React.PropTypes.string,
-    id: React.PropTypes.string,
-    unliked: React.PropTypes.array,
-    arrIndex: React.PropTypes.number
-  },
-
-  unlikeButton:function(buttonId) {
-    var unlike = this.props.name;
-    var arrIndex = this.props.arrIndex;
-    FB.api(this.props.id, function(response) {
-      console.log(response);
-    });
-    this.props.updateUnlikes(unlike, arrIndex);
-  },
-
-  render:function() {
-    var pageId = this.props.id;
-    return (
-      <div>
-        <button className="btn btn-primary" onClick={this.unlikeButton}
-         >Unlike  {this.props.name}
-        </button>
-      </div>
-    );
-  }
-});
-
-var Unlike = React.createClass({
-  propTypes: {
-    name: React.PropTypes.string
-  },
-
-  render:function() {
-    return (
-      <div>
-        <h2>Unliked pages</h2>
-        <button className="btn btn-success">
-          {this.props.name}
-        </button>
-     </div>
-   );
-  }
-});
-
+module.exports = Facebook;
 ReactDOM.render(<Facebook />, document.getElementById('main'));

@@ -1,8 +1,8 @@
 module.exports = {
-  entry: "./app.js", 
+  entry: "./app/js/Facebook.js", 
   output: {
     filename: "public/bundle.js"
-  }, 
+  },
   module: {
     loaders: [
       {
