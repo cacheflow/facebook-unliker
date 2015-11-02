@@ -1,5 +1,5 @@
 module.exports = {
-  entry: "./app/js/Facebook.js", 
+  entry: "./app/js/components/Facebook.js", 
   output: {
     filename: "public/bundle.js"
   },

@@ -6,6 +6,10 @@ var update = require('react-addons-update');
 var _ = require('underscore');
 var Unlike = require('./Unlike');
 var Like = require('./Like');
+var ReactRouter = require('react-router');
+var Router = ReactRouter.Router;
+var Route = ReactRouter.Route;
+var ReactCSSTransitionGroup = require('react/lib/ReactTransitionGroup');
 
 var Facebook = React.createClass({
   getInitialState: function(){
@@ -115,7 +119,7 @@ var Facebook = React.createClass({
     });
     var likedFromState = this.state.likes;
     var newLikedState = update(
-      likedFromState, {$push: [{
+      likedFromState, {$unshift: [{
         name: unlikedProps.name,
         id: unlikedProps.id,
         link: unlikedProps.link
@@ -132,7 +136,7 @@ var Facebook = React.createClass({
       });
     var unlikedFromState = this.state.unliked;
     var newUnlikedState = update(
-      unlikedFromState, {$push: [{
+      unlikedFromState, {$unshift: [{
         name: props.name,
         id: props.id,
         link: props.link
@@ -147,15 +151,11 @@ var Facebook = React.createClass({
     }, {scope: 'publish_actions'});
   },
 
-  render:function() {
-    var methodContext = this;
-    var showLoginOrLikes =
-    this.state.clicked ? <div><h1>Facebook Unliker: Unlike embarrassing stuff</h1>
-     <h2>Pages Liked</h2></div>:
-    <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
+  checkClickedState:function() {
     var passDownLikesToChild = this.state.likes.map(function(likesResponse, index) {
       return (
-        <Like key={likesResponse.id}
+        <Like
+          key={likesResponse.name + index}
           name={likesResponse.name}
           link={likesResponse.link}
           id={likesResponse.id}
@@ -167,27 +167,57 @@ var Facebook = React.createClass({
     }.bind(this));
     var passDownUnlikesToChild = this.state.unliked.map(function(unlike, index) {
       return (
-        <Unlike key = {unlike.id}
+          <Unlike
+           key = {index + unlike.id}
            name={unlike.name}
            id={unlike.id}
            link={unlike.link}
            arrIndex={index}
            redoLike={this.redoLike}
-        />
+          />
       );
     }.bind(this));
+
+    if(this.state.clicked) {
+      return (
+        <div>
+          <div className="page-header">
+            <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
+          </div>
+            <ul className="timeline">
+               {passDownUnlikesToChild}
+              {passDownLikesToChild}
+            </ul>
+        </div>
+      );
+    }
+    else {
+      return (
+        <div>
+          <div className="page-header">
+            <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
+            <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
+          </div>
+        </div>
+      )
+    }
+  },
+
+  render:function() {
     return (
       <div>
-        {showLoginOrLikes}
-        {passDownLikesToChild}
-        <div>
-           {passDownUnlikesToChild}
-        </div>
+        {this.checkClickedState()}
       </div>
     );
   }
 });
 
+ReactDOM.render((
+  <Router>
+    <Route path="/" component={Facebook}>
+    </Route>
+  </Router>
+), document.getElementById("facebook-container"))
+
 
 module.exports = Facebook;
-ReactDOM.render(<Facebook />, document.getElementById('main'));

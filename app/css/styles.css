@@ -3,7 +3,7 @@
   padding: 20px 0 20px;
   position: relative;
 }
-.timeline:before {
+.timeline:after {
   top: 0;
   bottom: 0;
   position: absolute;
@@ -17,6 +17,14 @@
   margin-bottom: 20px;
   position: relative;
 }
+ #unlike, #like {
+   width: 100%;
+   white-space: normal !important;
+ }
+ button {
+   width: 50%;
+   white-space: normal !important;
+ }
 .timeline > li:before,
 .timeline > li:after {
   content: " ";
@@ -24,6 +32,9 @@
 }
 .timeline > li:after {
   clear: both;
+}
+.page-header{
+  margin: 0 auto;
 }
 .timeline > li:before,
 .timeline > li:after {
@@ -135,4 +146,11 @@ padding-left:90px;
 }
 .timeline-body > p + p {
   margin-top: 5px;
+}
+
+/* React Styles */
+
+.like-enter{
+  opacity: 1;
+  transition: opacity 500ms ease-in;
 }
