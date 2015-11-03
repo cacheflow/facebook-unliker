@@ -101,7 +101,7 @@ var Facebook = React.createClass({
         });
       }).then(function(likes) { 
         if(likes.paging) {
-          this.fetchAllLikes(likes.data, likes.paging.next);
+          this.setStateAndFetchAllLikes(likes.data, likes.paging.next);
         }
         else {
           this.setState({likes: likes.data});
