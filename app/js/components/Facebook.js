@@ -75,7 +75,8 @@ var Facebook = React.createClass({
       console.log(data);
       resolve(data);
     },{
-      scope: 'publish_actions'
+      scope: 'user_likes',
+      return_scopes: true 
     });
   });
  },
