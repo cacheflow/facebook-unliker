@@ -104,11 +104,11 @@
 	  },
 
 	  getFirstLikes: function getFirstLikes(apiEndpoint) {
-	    return new Promise(function (resolve, reject) {
-	      FB.api("me/likes?fields=link,name,created_time&limit=100", function (likes) {
-	        resolve(likes);
-	      });
-	    });
+	    var methodContext = this;
+	    FB.api("me/likes?fields=link,name,created_time&limit=100", (function (likes) {
+	      this.setState({ likes: likes });
+	      console.log("here are your likes from state", this.state.likes);
+	    }).bind(this));
 	  },
 
 	  getAllLikes: function getAllLikes(myLikes) {
@@ -143,13 +143,23 @@
 	  },
 
 	  getLikes: function getLikes() {
-	    Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then((function (data) {
-	      this.setStateAndFetchAllLikes(data[1].paging.next);
+	    this.checkLoginStatus().then((function (response) {
+	      return new Promise(function (resolve, reject) {
+	        FB.api("me/likes?fields=link,name,created_time&limit=100", function (response) {
+	          resolve(response);
+	        });
+	      }).then((function (likes) {
+	        if (likes.paging) {
+	          this.setState({ likes: likes.data });
+	          this.fetchAllLikes(likes.paging.next);
+	        } else {
+	          this.setState({ likes: likes.data });
+	        }
+	      }).bind(this));
 	    }).bind(this));
 	  },
 
 	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(nextApiEndpoint) {
-	    this.setState({ firstLikes: nextApiEndpoint.data });
 	    this.fetchAllLikes(nextApiEndpoint);
 	  },
 
