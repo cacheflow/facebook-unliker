@@ -150,8 +150,7 @@
 	        });
 	      }).then((function (likes) {
 	        if (likes.paging) {
-	          this.setState({ likes: likes.data });
-	          this.fetchAllLikes(likes.paging.next);
+	          this.fetchAllLikes(likes.data, likes.paging.next);
 	        } else {
 	          this.setState({ likes: likes.data });
 	        }
@@ -159,7 +158,8 @@
 	    }).bind(this));
 	  },
 
-	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(nextApiEndpoint) {
+	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(likesData, nextApiEndpoint) {
+	    this.setState({ likes: likesData });
 	    this.fetchAllLikes(nextApiEndpoint);
 	  },
 
