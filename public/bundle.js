@@ -146,15 +146,14 @@
 	    this.checkLoginStatus().then((function (response) {
 	      return new Promise(function (resolve, reject) {
 	        FB.api("me/likes?fields=link,name,created_time&limit=100", function (response) {
+	          console.log(response);
 	          resolve(response);
 	        });
 	      }).then((function (response) {
-	        var likes = response.data;
-	        var nextApiEndpoint = response.paging.next;
 	        if (response.paging) {
-	          this.fetchAllLikes(likes, nextApiEndpoint);
+	          this.setStateAndFetchAllLikes(response.data, response.paging.next);
 	        } else {
-	          this.setState({ likes: likes });
+	          this.setState({ likes: response.data });
 	        }
 	      }).bind(this));
 	    }).bind(this));
