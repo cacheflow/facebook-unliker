@@ -53,12 +53,12 @@ var Facebook = React.createClass({
 
 
  getFirstLikes:function(apiEndpoint) {
-  return new Promise(function(resolve, reject) {
-  FB.api("me/likes?fields=link,name,created_time&limit=100",
-      function(likes) {
-        resolve(likes);
-      });
-  });
+  var methodContext = this; 
+  FB.api("me/likes?fields=link,name,created_time&limit=100", 
+    function(likes) { 
+      this.setState({likes: likes});
+      console.log("here are your likes from state", this.state.likes);
+  }.bind(this));
  },
 
  getAllLikes: function(myLikes) {
@@ -90,16 +90,29 @@ var Facebook = React.createClass({
       this.fetchAllLikes(responseData.paging.next);
     }
   }.bind(this));
-  },
+ },
 
   getLikes:function() {
-   Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then(function(data) {
-    this.setStateAndFetchAllLikes(data[1].paging.next);
-   }.bind(this));
+    this.checkLoginStatus().then(function(response) {
+      return new Promise(function(resolve, reject){
+        FB.api("me/likes?fields=link,name,created_time&limit=100", function(response) {
+          resolve(response);
+        });
+      }).then(function(response) { 
+        var likes = response.data; 
+        var nextApiEndpoint = response.paging.next; 
+        if(response.paging) {
+          this.fetchAllLikes(likes, nextApiEndpoint);
+        }
+        else {
+          this.setState({likes: likes});
+        }
+      }.bind(this));
+    }.bind(this));
   },
 
- setStateAndFetchAllLikes:function(nextApiEndpoint) {
-   this.setState({firstLikes: nextApiEndpoint.data});
+ setStateAndFetchAllLikes:function(likesData, nextApiEndpoint) {
+   this.setState({likes: likesData});
    this.fetchAllLikes(nextApiEndpoint);
  },
 
@@ -162,7 +175,8 @@ var Facebook = React.createClass({
           arrIndex={index}
           updateUnlikes={this.updateUnlikes}
           unliked={this.state.unliked}
-        />
+        >
+        </Like> 
       );
     }.bind(this));
     var passDownUnlikesToChild = this.state.unliked.map(function(unlike, index) {
@@ -174,31 +188,22 @@ var Facebook = React.createClass({
            link={unlike.link}
            arrIndex={index}
            redoLike={this.redoLike}
-          />
+          >
+          </Unlike>
       );
     }.bind(this));
 
     if(this.state.clicked) {
       return (
-        <div>
-          <div className="page-header">
-            <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
-          </div>
-            <ul className="timeline">
-               {passDownUnlikesToChild}
-              {passDownLikesToChild}
-            </ul>
-        </div>
+        <ul className="timeline">
+           {passDownUnlikesToChild}
+          {passDownLikesToChild}
+        </ul>
       );
     }
     else {
       return (
-        <div>
-          <div className="page-header">
-            <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
-            <button className="btn btn-primary" onClick={this.handleClick}>Login into Facebook</button>
-          </div>
-        </div>
+        <button className="btn btn-primary" id="login" onClick={this.handleClick}>Login into Facebook</button>
       )
     }
   },

@@ -104,11 +104,11 @@
 	  },
 
 	  getFirstLikes: function getFirstLikes(apiEndpoint) {
-	    return new Promise(function (resolve, reject) {
-	      FB.api("me/likes?fields=link,name,created_time&limit=100", function (likes) {
-	        resolve(likes);
-	      });
-	    });
+	    var methodContext = this;
+	    FB.api("me/likes?fields=link,name,created_time&limit=100", (function (likes) {
+	      this.setState({ likes: likes });
+	      console.log("here are your likes from state", this.state.likes);
+	    }).bind(this));
 	  },
 
 	  getAllLikes: function getAllLikes(myLikes) {
@@ -143,13 +143,25 @@
 	  },
 
 	  getLikes: function getLikes() {
-	    Promise.all([this.checkLoginStatus(), this.getFirstLikes()]).then((function (data) {
-	      this.setStateAndFetchAllLikes(data[1].paging.next);
+	    this.checkLoginStatus().then((function (response) {
+	      return new Promise(function (resolve, reject) {
+	        FB.api("me/likes?fields=link,name,created_time&limit=100", function (response) {
+	          resolve(response);
+	        });
+	      }).then((function (response) {
+	        var likes = response.data;
+	        var nextApiEndpoint = response.paging.next;
+	        if (response.paging) {
+	          this.fetchAllLikes(likes, nextApiEndpoint);
+	        } else {
+	          this.setState({ likes: likes });
+	        }
+	      }).bind(this));
 	    }).bind(this));
 	  },
 
-	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(nextApiEndpoint) {
-	    this.setState({ firstLikes: nextApiEndpoint.data });
+	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(likesData, nextApiEndpoint) {
+	    this.setState({ likes: likesData });
 	    this.fetchAllLikes(nextApiEndpoint);
 	  },
 
@@ -218,42 +230,16 @@
 
 	    if (this.state.clicked) {
 	      return React.createElement(
-	        'div',
-	        null,
-	        React.createElement(
-	          'div',
-	          { className: 'page-header' },
-	          React.createElement(
-	            'h1',
-	            { id: 'timeline' },
-	            'Facebook Unliker: Unlike Embarrassing Stuff'
-	          )
-	        ),
-	        React.createElement(
-	          'ul',
-	          { className: 'timeline' },
-	          passDownUnlikesToChild,
-	          passDownLikesToChild
-	        )
+	        'ul',
+	        { className: 'timeline' },
+	        passDownUnlikesToChild,
+	        passDownLikesToChild
 	      );
 	    } else {
 	      return React.createElement(
-	        'div',
-	        null,
-	        React.createElement(
-	          'div',
-	          { className: 'page-header' },
-	          React.createElement(
-	            'h1',
-	            { id: 'timeline' },
-	            'Facebook Unliker: Unlike Embarrassing Stuff'
-	          ),
-	          React.createElement(
-	            'button',
-	            { className: 'btn btn-primary', onClick: this.handleClick },
-	            'Login into Facebook'
-	          )
-	        )
+	        'button',
+	        { className: 'btn btn-primary', id: 'login', onClick: this.handleClick },
+	        'Login into Facebook'
 	      );
 	    }
 	  },
