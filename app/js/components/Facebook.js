@@ -70,7 +70,6 @@ var Facebook = React.createClass({
  },
 
  checkLoginStatus: function() {
-  return new Promise(function(resolve, rejecet) {
     FB.login(function(data) {
       console.log(data);
       resolve(data);
@@ -94,20 +93,7 @@ var Facebook = React.createClass({
  },
 
   getLikes:function() {
-    this.checkLoginStatus().then(function(response) {
-      return new Promise(function(resolve, reject){
-        FB.api("me/likes?fields=link,name,created_time&limit=100", function(response) {
-          resolve(response);
-        });
-      }).then(function(likes) { 
-        if(likes.paging) {
-          this.setStateAndFetchAllLikes(likes.data, likes.paging.next);
-        }
-        else {
-          this.setState({likes: likes.data});
-        }
-      }.bind(this));
-    }.bind(this));
+    this.checkLoginStatus()
   },
 
  setStateAndFetchAllLikes:function(likesData, nextApiEndpoint) {
