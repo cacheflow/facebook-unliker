@@ -72,12 +72,10 @@ var Facebook = React.createClass({
  checkLoginStatus: function() {
     FB.login(function(data) {
       console.log(data);
-      resolve(data);
     },{
       scope: 'user_likes',
       return_scopes: true 
     });
-  });
  },
 
  fetchAllLikes:function(nextApiEndpoint) {

@@ -120,13 +120,11 @@
 	  },
 
 	  checkLoginStatus: function checkLoginStatus() {
-	    return new Promise(function (resolve, rejecet) {
-	      FB.login(function (data) {
-	        console.log(data);
-	        resolve(data);
-	      }, {
-	        scope: 'publish_actions'
-	      });
+	    FB.login(function (data) {
+	      console.log(data);
+	    }, {
+	      scope: 'user_likes',
+	      return_scopes: true
 	    });
 	  },
 
@@ -143,19 +141,7 @@
 	  },
 
 	  getLikes: function getLikes() {
-	    this.checkLoginStatus().then((function (response) {
-	      return new Promise(function (resolve, reject) {
-	        FB.api("me/likes?fields=link,name,created_time&limit=100", function (response) {
-	          resolve(response);
-	        });
-	      }).then((function (likes) {
-	        if (likes.paging) {
-	          this.fetchAllLikes(likes.data, likes.paging.next);
-	        } else {
-	          this.setState({ likes: likes.data });
-	        }
-	      }).bind(this));
-	    }).bind(this));
+	    this.checkLoginStatus();
 	  },
 
 	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(likesData, nextApiEndpoint) {
