@@ -26,86 +26,26 @@ var Facebook = React.createClass({
       value: "me/likes?fields=link,name,created_time&limit=100"
     };
   },
-
-
-  componentDidMount: function() {
-    //Initialize the Facebook Javascript SDK
-   window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '1630177167258981',
-      xfbml      : false,
-      version    : 'v2.5',
-      summary    : true
-    });
-  };
-  (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "http://connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
- },
-
- setLikes:function(likes) {
-  this.setState({likes: likes});
- },
-
-
- getFirstLikes:function(apiEndpoint) {
-  var methodContext = this; 
-  FB.api("me/likes?fields=link,name,created_time&limit=100", 
-    function(likes) { 
-      this.setState({likes: likes});
-      console.log("here are your likes from state", this.state.likes);
-  }.bind(this));
- },
-
- getAllLikes: function(myLikes) {
-    return new Promise(function(resolve, reject) {
-      FB.api(myLikes.paging.next(function(data) {
-        console.log(data);
-      }));
-    });
- },
-
- checkLoginStatus: function() {
-    FB.login(function(data) {
-      console.log(data);
-    },{
-      scope: 'user_likes',
-      return_scopes: true 
-    });
- },
-
- fetchAllLikes:function(nextApiEndpoint) {
-  FB.api(nextApiEndpoint, function(responseData) {
-    var allLikes = this.state.likes;
-    allLikes = allLikes.concat(responseData.data);
-    this.setState({likes: allLikes});
-    console.log(this.state.likes);
-    if(responseData.paging) {
-      this.fetchAllLikes(responseData.paging.next);
-    }
-  }.bind(this));
- },
-
+ 
   getLikes:function() {
-    this.checkLoginStatus()
+    var currentLikes = this.state.likes; 
+    currentLikes = currentLikes.push(
+      {"name": "bear", "id": "0"}, 
+      {"name": "obama", "id": "1"}, 
+      {"name": "new york", "id": "2"}, 
+      {"name": "I know what you did last summer", "id": "3"}, 
+      {"name": "vegan food", "id": "4"}, 
+      {"name": "Starbucks", "id": "5"}, 
+      {"name": "The cool kid who likes to party", "id": "6"},
+      {"name": "Katy Perry", "id": "7"},
+      {"name": "The Weeknd", "id": "8"},  
+    )
+    console.log(this.state.likes);
   },
-
- setStateAndFetchAllLikes:function(likesData, nextApiEndpoint) {
-   this.setState({likes: likesData});
-   this.fetchAllLikes(nextApiEndpoint);
- },
 
   handleClick:function() {
     this.getLikes();
     this.setState({clicked: true});
-  },
-
-  unlikeOnFacebook:function(propsId) {
-
   },
 
   redoLike:function(unlikedProps) {
@@ -117,8 +57,7 @@ var Facebook = React.createClass({
     var newLikedState = update(
       likedFromState, {$unshift: [{
         name: unlikedProps.name,
-        id: unlikedProps.id,
-        link: unlikedProps.link
+        id: unlikedProps.arrIndex
     }]});
     this.setState({likes: newLikedState});
 
@@ -134,27 +73,18 @@ var Facebook = React.createClass({
     var newUnlikedState = update(
       unlikedFromState, {$unshift: [{
         name: props.name,
-        id: props.id,
-        link: props.link
+        id: props.arrIndex
     }]});
     this.setState({unliked: newUnlikedState});
   },
 
-  postToFacebook:function() {
-    var fbMsg = this.refs.post.value;
-    FB.login(function(){
-      FB.api('/me/feed', 'post', {message: 'Hello, world!'});
-    }, {scope: 'publish_actions'});
-  },
-
   checkClickedState:function() {
+
     var passDownLikesToChild = this.state.likes.map(function(likesResponse, index) {
       return (
         <Like
           key={likesResponse.name + index}
           name={likesResponse.name}
-          link={likesResponse.link}
-          id={likesResponse.id}
           arrIndex={index}
           updateUnlikes={this.updateUnlikes}
           unliked={this.state.unliked}
@@ -165,11 +95,9 @@ var Facebook = React.createClass({
     var passDownUnlikesToChild = this.state.unliked.map(function(unlike, index) {
       return (
           <Unlike
-           key = {index + unlike.id}
+           key = {index + unlike}
            name={unlike.name}
-           id={unlike.id}
-           link={unlike.link}
-           arrIndex={index}
+           id={index.id}
            redoLike={this.redoLike}
           >
           </Unlike>
