@@ -114,8 +114,7 @@ var Facebook = React.createClass({
 
  setStateAndFetchAllLikes:function(likesData, nextApiEndpoint) {
    this.setState({likes: likesData});
-   this.
-   this.fetchAllLikes(nextApiEndpoint);
+    this.fetchAllLikes(nextApiEndpoint);
    this.setState({showLoadingText: false});
  },
 
@@ -212,7 +211,8 @@ var Facebook = React.createClass({
       return (
          <div>
             <button className="btn btn-primary" id="logout" onClick={this.logoutFacebook}>Logout Facebook</button>
-            <div class="page-header">
+
+            <div className="page-header">
               <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
             </div>
             <ul className="timeline">
@@ -226,10 +226,10 @@ var Facebook = React.createClass({
       return (
         <div>
           <button className="btn btn-primary" id="login" onClick={this.handleClick}>Login into Facebook</button>
-          <div class="page-header">
+          <div className="page-header">
               <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
           </div>
-          <p> As a I liked a bunch of crazy pages on Facebook.
+          <h4> As a I liked a bunch of crazy pages on Facebook.
           At that time it used to be called "Become a fan".
           I would like everything in sight and accumulated a bunch of weird liked pages.
           This app was created out of that problem. I am far too lazy to go back and find every
@@ -238,7 +238,7 @@ var Facebook = React.createClass({
           like as well. And we do not store any of of your personal information. We just need you to login
           and connect your Facebook account so we can find the pages you have liked over the years.
           Have fun unliking stuff!
-          </p>
+          </h4>
         </div>
       )
     }
