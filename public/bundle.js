@@ -67,7 +67,8 @@
 	      unliked: [],
 	      firstLikes: [],
 	      likes: [],
-	      clicked: false
+	      clicked: false,
+	      showLoadingText: false
 	    };
 	  },
 
@@ -162,9 +163,11 @@
 	  setStateAndFetchAllLikes: function setStateAndFetchAllLikes(likesData, nextApiEndpoint) {
 	    this.setState({ likes: likesData });
 	    this.fetchAllLikes(nextApiEndpoint);
+	    this.setState({ showLoadingText: false });
 	  },
 
 	  handleClick: function handleClick() {
+	    this.setState({ showLoadingText: true });
 	    this.getLikes();
 	    this.setState({ clicked: true });
 	  },
@@ -204,6 +207,17 @@
 	    }, { scope: 'publish_actions' });
 	  },
 
+	  logoutFacebook: function logoutFacebook() {
+	    this.setState({ likes: [],
+	      unliked: [],
+	      clicked: false
+	    });
+	    this.forceUpdate();
+	    FB.logout(function (response) {
+	      console.log(response);
+	    });
+	  },
+
 	  checkClickedState: function checkClickedState() {
 	    var passDownLikesToChild = this.state.likes.map((function (likesResponse, index) {
 	      return React.createElement(Like, {
@@ -229,25 +243,49 @@
 
 	    if (this.state.clicked) {
 	      return React.createElement(
-	        'ul',
-	        { className: 'timeline' },
-	        passDownUnlikesToChild,
-	        passDownLikesToChild
+	        'div',
+	        null,
+	        React.createElement(
+	          'button',
+	          { className: 'btn btn-primary', id: 'login', onClick: this.logoutFacebook },
+	          'Logout Facebook'
+	        ),
+	        React.createElement(
+	          'ul',
+	          { className: 'timeline' },
+	          passDownUnlikesToChild,
+	          passDownLikesToChild
+	        )
 	      );
 	    } else {
 	      return React.createElement(
-	        'button',
-	        { className: 'btn btn-primary', id: 'login', onClick: this.handleClick },
-	        'Login into Facebook'
+	        'div',
+	        null,
+	        React.createElement(
+	          'p',
+	          null,
+	          ' As a I liked a bunch of crazy pages on Facebook. At that time it used to be called "Become a fan". I would like everything in sight and accumulated a bunch of weird liked pages. This app was created out of that problem. I am far too lazy to go back and find every page I liked then unlike it. This app simply gets all of your likes from newest to oldest and allows you to unlike them one by one. Also, if you make a mistake you can easily redo the like as well. And we do not store any of of your personal information. We just need you to login and connect your Facebook account so we can find the pages you have liked over the years. Have fun unliking stuff!'
+	        ),
+	        React.createElement(
+	          'button',
+	          { className: 'btn btn-primary', id: 'login', onClick: this.handleClick },
+	          'Login into Facebook'
+	        )
 	      );
 	    }
 	  },
 
 	  render: function render() {
+	    var showLoadingText = this.state.showLoadingText ? React.createElement(
+	      'h1',
+	      null,
+	      'Hold on we\'re getting your likes.'
+	    ) : React.createElement('h1', null);
 	    return React.createElement(
 	      'div',
 	      null,
-	      this.checkClickedState()
+	      this.checkClickedState(),
+	      showLoadingText
 	    );
 	  }
 	});

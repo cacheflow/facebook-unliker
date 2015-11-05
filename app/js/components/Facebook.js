@@ -17,7 +17,8 @@ var Facebook = React.createClass({
       unliked: [],
       firstLikes: [],
       likes: [],
-      clicked: false
+      clicked: false,
+      showLoadingText: false
     };
   },
 
@@ -53,9 +54,9 @@ var Facebook = React.createClass({
 
 
  getFirstLikes:function(apiEndpoint) {
-  var methodContext = this; 
-  FB.api("me/likes?fields=link,name,created_time&limit=100", 
-    function(likes) { 
+  var methodContext = this;
+  FB.api("me/likes?fields=link,name,created_time&limit=100",
+    function(likes) {
       this.setState({likes: likes});
       console.log("here are your likes from state", this.state.likes);
   }.bind(this));
@@ -99,7 +100,7 @@ var Facebook = React.createClass({
           console.log(response);
           resolve(response);
         });
-      }).then(function(response) { 
+      }).then(function(response) {
         if(response.paging) {
           this.setStateAndFetchAllLikes(response.data, response.paging.next);
         }
@@ -113,9 +114,11 @@ var Facebook = React.createClass({
  setStateAndFetchAllLikes:function(likesData, nextApiEndpoint) {
    this.setState({likes: likesData});
    this.fetchAllLikes(nextApiEndpoint);
+   this.setState({showLoadingText: false});
  },
 
   handleClick:function() {
+    this.setState({showLoadingText: true});
     this.getLikes();
     this.setState({clicked: true});
   },
@@ -163,6 +166,17 @@ var Facebook = React.createClass({
     }, {scope: 'publish_actions'});
   },
 
+  logoutFacebook:function() {
+    this.setState({likes: [],
+      unliked: [],
+      clicked: false
+    });
+    this.forceUpdate()
+    FB.logout(function(response) {
+      console.log(response);
+    });
+  },
+
   checkClickedState:function() {
     var passDownLikesToChild = this.state.likes.map(function(likesResponse, index) {
       return (
@@ -175,7 +189,7 @@ var Facebook = React.createClass({
           updateUnlikes={this.updateUnlikes}
           unliked={this.state.unliked}
         >
-        </Like> 
+        </Like>
       );
     }.bind(this));
     var passDownUnlikesToChild = this.state.unliked.map(function(unlike, index) {
@@ -194,23 +208,40 @@ var Facebook = React.createClass({
 
     if(this.state.clicked) {
       return (
-        <ul className="timeline">
-           {passDownUnlikesToChild}
-          {passDownLikesToChild}
-        </ul>
+        <div>
+          <button className="btn btn-primary" id="login" onClick={this.logoutFacebook}>Logout Facebook</button>
+          <ul className="timeline">
+             {passDownUnlikesToChild}
+            {passDownLikesToChild}
+          </ul>
+        </div>
       );
     }
     else {
       return (
-        <button className="btn btn-primary" id="login" onClick={this.handleClick}>Login into Facebook</button>
+        <div>
+          <p> As a I liked a bunch of crazy pages on Facebook.
+          At that time it used to be called "Become a fan".
+          I would like everything in sight and accumulated a bunch of weird liked pages.
+          This app was created out of that problem. I am far too lazy to go back and find every
+          page I liked then unlike it. This app simply gets all of your likes from newest to oldest
+          and allows you to unlike them one by one. Also, if you make a mistake you can easily redo the
+          like as well. And we do not store any of of your personal information. We just need you to login
+          and connect your Facebook account so we can find the pages you have liked over the years.
+          Have fun unliking stuff!
+          </p>
+          <button className="btn btn-primary" id="login" onClick={this.handleClick}>Login into Facebook</button>
+        </div>
       )
     }
   },
 
   render:function() {
+    var showLoadingText = this.state.showLoadingText ? <h1>Hold on we're getting your likes.</h1> : <h1></h1>
     return (
       <div>
         {this.checkClickedState()}
+        {showLoadingText}
       </div>
     );
   }
