@@ -22,9 +22,10 @@
    white-space: normal !important;
  }
 
- #login {
-   width: 50%;
+ #login, #logout {
+   width: 30%;
    margin: 10px auto !important;
+   float: right;
    white-space: normal !important;
  }
 .timeline > li:before,
