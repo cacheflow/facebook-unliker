@@ -21,8 +21,11 @@
    width: 100%;
    white-space: normal !important;
  }
- button {
-   width: 50%;
+
+ #login, #logout {
+   width: 30%;
+   margin: 10px auto !important;
+   float: right;
    white-space: normal !important;
  }
 .timeline > li:before,
@@ -35,6 +38,7 @@
 }
 .page-header{
   margin: 0 auto;
+  display: block;
 }
 .timeline > li:before,
 .timeline > li:after {
@@ -139,7 +143,9 @@ padding-left:90px;
 .timeline-title {
   margin-top: 0;
   color: inherit;
+  word-wrap: break-word;
 }
+
 .timeline-body > p,
 .timeline-body > ul {
   margin-bottom: 0;
@@ -152,5 +158,5 @@ padding-left:90px;
 
 .like-enter{
   opacity: 1;
-  transition: opacity 500ms ease-in;
+  transition: opacity 100ms ease-in;
 }
