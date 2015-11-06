@@ -44,7 +44,7 @@ var Facebook = React.createClass({
      var js, fjs = d.getElementsByTagName(s)[0];
      if (d.getElementById(id)) {return;}
      js = d.createElement(s); js.id = id;
-     js.src = "http://connect.facebook.net/en_US/sdk.js";
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
      fjs.parentNode.insertBefore(js, fjs);
    }(document, 'script', 'facebook-jssdk'));
  },
@@ -229,7 +229,7 @@ var Facebook = React.createClass({
           <div className="page-header">
               <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
           </div>
-          <h4> As a I liked a bunch of crazy pages on Facebook.
+          <h4> As a kid I liked a bunch of crazy pages on Facebook.
           At that time it used to be called "Become a fan".
           I would like everything in sight and accumulated a bunch of weird liked pages.
           This app was created out of that problem. I am far too lazy to go back and find every
