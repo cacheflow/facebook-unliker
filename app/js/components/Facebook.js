@@ -10,215 +10,66 @@ var ReactRouter = require('react-router');
 var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var ReactCSSTransitionGroup = require('react/lib/ReactTransitionGroup');
+var FacebookStore = require("../stores/facebook-store");
+var FacebookActions = require("../actions/facebook-actions");
+
+function getFacebookState() {
+  return {
+    username: FacebookStore.getUserName(),
+    clicked: FacebookStore.getClickedStatus()
+  };
+}
 
 var Facebook = React.createClass({
   getInitialState: function(){
-    return {
-      unliked: [],
-      firstLikes: [],
-      likes: [],
-      clicked: false,
-      username: "",
-      showLoadingText: false
-    };
+    return getFacebookState();
   },
-
-  getDefaultProps: function() {
-    return {
-      value: "me/likes?fields=link,name,created_time&limit=100"
-    };
-  },
-
 
   componentDidMount: function() {
     //Initialize the Facebook Javascript SDK
-   window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '1630177167258981',
-      xfbml      : false,
-      version    : 'v2.5',
-      summary    : true
-    });
-  };
-  (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "https://connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
- },
-
- setLikes:function(likes) {
-  this.setState({likes: likes});
- },
-
-
- getFirstLikes:function(apiEndpoint) {
-  var methodContext = this;
-  FB.api("me/likes?fields=link,name,created_time&limit=100",
-    function(likes) {
-      this.setState({likes: likes});
-      console.log("here are your likes from state", this.state.likes);
-  }.bind(this));
- },
-
- getAllLikes: function(myLikes) {
-    return new Promise(function(resolve, reject) {
-      FB.api(myLikes.paging.next(function(data) {
-        console.log(data);
-      }));
-    });
- },
-
- checkLoginStatus: function() {
-  return new Promise(function(resolve, rejecet) {
-    FB.login(function(data) {
-      console.log(data);
-      resolve(data);
-    },{
-      scope: 'publish_actions'
-    });
-  });
- },
-
- fetchAllLikes:function(nextApiEndpoint) {
-  FB.api(nextApiEndpoint, function(responseData) {
-    var allLikes = this.state.likes;
-    allLikes = allLikes.concat(responseData.data);
-    this.setState({likes: allLikes});
-    console.log(this.state.likes);
-    if(responseData.paging) {
-      this.fetchAllLikes(responseData.paging.next);
-    }
-  }.bind(this));
- },
-
-  getLikes:function() {
-    this.checkLoginStatus().then(function(response) {
-      return new Promise(function(resolve, reject){
-        FB.api("me/likes?fields=link,name,created_time&limit=100", function(response) {
-          console.log(response);
-          resolve(response);
-        });
-      }).then(function(response) {
-        if(response.paging) {
-          this.setStateAndFetchAllLikes(response.data, response.paging.next);
-        }
-        else {
-          this.setState({likes: response.data});
-        }
-      }.bind(this));
-    }.bind(this));
+    this.facebookApi();
+    FacebookStore.addChangeListener(this._onChange);
   },
 
- setStateAndFetchAllLikes:function(likesData, nextApiEndpoint) {
-   this.setState({likes: likesData});
-    this.fetchAllLikes(nextApiEndpoint);
-   this.setState({showLoadingText: false});
- },
-
-  handleClick:function() {
-    this.setState({showLoadingText: true});
-    this.getLikes();
-    this.setState({clicked: true});
+  componentWillUnMount: function() {
+    FacebookStore.removeChangeListener(this._onChange);
   },
 
-  unlikeOnFacebook:function(propsId) {
-
+  _onChange:function() {
+    //Get the state from the Facebook store
+    this.setState(getFacebookState());
   },
 
-  redoLike:function(unlikedProps) {
-    this.setState({unliked:
-      update(
-        this.state.unliked, {$splice: [[unlikedProps.arrIndex, 1]]})
-    });
-    var likedFromState = this.state.likes;
-    var newLikedState = update(
-      likedFromState, {$unshift: [{
-        name: unlikedProps.name,
-        id: unlikedProps.id,
-        link: unlikedProps.link
-    }]});
-    this.setState({likes: newLikedState});
-
-    console.log("decreasing your length", this.state.unliked.length);
-  },
-
-  updateUnlikes:function(props) {
-    this.setState({likes:
-      update(
-        this.state.likes, {$splice: [[props.arrIndex, 1]]})
+  facebookApi:function() {
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '1630177167258981',
+        xfbml      : false,
+        version    : 'v2.5',
+        summary    : true
       });
-    var unlikedFromState = this.state.unliked;
-    var newUnlikedState = update(
-      unlikedFromState, {$unshift: [{
-        name: props.name,
-        id: props.id,
-        link: props.link
-    }]});
-    this.setState({unliked: newUnlikedState});
+    };
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
   },
-
-  postToFacebook:function() {
-    var fbMsg = this.refs.post.value;
-    FB.login(function(){
-      FB.api('/me/feed', 'post', {message: 'Hello, world!'});
-    }, {scope: 'publish_actions'});
-  },
-
-  logoutFacebook:function() {
-    this.setState({likes: [],
-      unliked: [],
-      clicked: false
-    });
-    this.forceUpdate()
-    FB.logout(function(response) {
-      console.log(response);
-    });
+  handleClick: function() {
+    FacebookActions.login();
   },
 
   checkClickedState:function() {
-    var passDownLikesToChild = this.state.likes.map(function(likesResponse, index) {
-      return (
-        <Like
-          key={likesResponse.name + index}
-          name={likesResponse.name}
-          link={likesResponse.link}
-          id={likesResponse.id}
-          arrIndex={index}
-          updateUnlikes={this.updateUnlikes}
-          unliked={this.state.unliked}
-        >
-        </Like>
-      );
-    }.bind(this));
-    var passDownUnlikesToChild = this.state.unliked.map(function(unlike, index) {
-      return (
-          <Unlike
-           key = {index + unlike.id}
-           name={unlike.name}
-           id={unlike.id}
-           link={unlike.link}
-           arrIndex={index}
-           redoLike={this.redoLike}
-          >
-          </Unlike>
-      );
-    }.bind(this));
-
     if(this.state.clicked) {
       return (
          <div>
-            <button className="btn btn-primary" id="logout" onClick={this.logoutFacebook}>Logout Facebook</button>
-
             <div className="page-header">
               <h1 id="timeline">Facebook Unliker: Unlike Embarrassing Stuff</h1>
             </div>
-            <ul className="timeline">
-               {passDownUnlikesToChild}
-              {passDownLikesToChild}
-            </ul>
+            <h1>Hello {this.state.username}</h1>
+            <input type="text" ref="message" />
         </div>
       );
     }
@@ -245,11 +96,9 @@ var Facebook = React.createClass({
   },
 
   render:function() {
-    var showLoadingText = this.state.showLoadingText ? <h1>Hold on we are getting your likes.</h1> : <h1></h1>
     return (
       <div>
         {this.checkClickedState()}
-        {showLoadingText}
       </div>
     );
   }
